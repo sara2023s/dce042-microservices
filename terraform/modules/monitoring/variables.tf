@@ -1,0 +1,11 @@
+variable "project_name"             { type = string }
+variable "environment"               { type = string }
+variable "aws_region"                { type = string }
+variable "ecs_cluster_name"          { type = string }
+variable "service_a_name"            { type = string }
+variable "service_b_name"            { type = string }
+variable "autoscaling_min_capacity"  { type = number }
+variable "autoscaling_max_capacity"  { type = number }
+variable "cpu_scale_out_threshold"   { type = number }
+variable "cpu_scale_in_threshold"    { type = number }
+variable "sns_topic_arn"             { type = string }

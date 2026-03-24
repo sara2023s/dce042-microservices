@@ -1,0 +1,43 @@
+# Copy this file to terraform.tfvars and fill in real values before deploying.
+# Never commit terraform.tfvars to source control (already in .gitignore).
+
+aws_region   = "us-east-1"
+project_name = "dce042"
+environment  = "dev"
+
+# Networking
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
+availability_zones   = ["us-east-1a", "us-east-1b"]
+
+# Services
+service_a_name = "product-service"
+service_b_name = "order-service"
+
+# Autoscaling
+autoscaling_min_capacity  = 1
+autoscaling_max_capacity  = 4
+cpu_scale_out_threshold   = 70
+cpu_scale_in_threshold    = 30
+
+# CI/CD – set these after creating the CodeStar connection in the AWS Console
+github_owner            = "your-github-username"
+github_repo             = "dce042-microservices"
+github_branch           = "main"
+codestar_connection_arn = "arn:aws:codestar-connections:us-east-1:123456789012:connection/xxxxxxxx"
+
+# HTTPS – provide an ACM certificate ARN or leave empty for HTTP-only
+acm_certificate_arn = ""
+
+# Notifications
+alert_email = "your-email@example.com"
+
+# Azure Entra ID SAML federation
+# Paste the App Federation Metadata URL from the Entra ID Enterprise Application
+entra_saml_metadata_url = "https://login.microsoftonline.com/<tenant-id>/federationmetadata/2007-06/federationmetadata.xml?appid=<app-id>"
+entra_saml_metadata_xml = ""   # Only required when URL is not publicly reachable
+
+# Remote state (must match what setup-backend.sh created)
+tf_state_bucket     = "dce042-tf-state"
+tf_state_lock_table = "dce042-tf-state-lock"

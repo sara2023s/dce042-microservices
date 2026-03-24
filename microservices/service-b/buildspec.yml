@@ -1,0 +1,77 @@
+version: 0.2
+
+# CodeBuild buildspec for service-b (Order Service)
+
+env:
+  variables:
+    IMAGE_TAG: "latest"
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:-latest}
+      - FULL_IMAGE_URI=$ECR_REPO_URL:$IMAGE_TAG
+      - echo "Image URI: $FULL_IMAGE_URI"
+
+  build:
+    commands:
+      - echo "Building Docker image..."
+      - cd microservices/$SERVICE_NAME
+      - docker build -t $FULL_IMAGE_URI .
+      - docker tag $FULL_IMAGE_URI $ECR_REPO_URL:latest
+
+  post_build:
+    commands:
+      - echo "Pushing image to ECR..."
+      - docker push $FULL_IMAGE_URI
+      - docker push $ECR_REPO_URL:latest
+      - echo "Writing build artifacts..."
+      - cd $CODEBUILD_SRC_DIR
+      - |
+        cat > taskdef.json << EOF
+        {
+          "family": "${TASK_DEF_FAMILY}",
+          "containerDefinitions": [
+            {
+              "name": "${SERVICE_NAME}",
+              "image": "${FULL_IMAGE_URI}",
+              "portMappings": [{"containerPort": 5001, "protocol": "tcp"}],
+              "essential": true,
+              "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/${SERVICE_NAME}",
+                  "awslogs-region": "${AWS_REGION}",
+                  "awslogs-stream-prefix": "ecs"
+                }
+              }
+            }
+          ],
+          "requiresCompatibilities": ["FARGATE"],
+          "networkMode": "awsvpc",
+          "cpu": "256",
+          "memory": "512"
+        }
+        EOF
+      - |
+        cat > appspec.yml << EOF
+        version: 0.0
+        Resources:
+          - TargetService:
+              Type: AWS::ECS::Service
+              Properties:
+                TaskDefinition: <TASK_DEFINITION>
+                LoadBalancerInfo:
+                  ContainerName: "${SERVICE_NAME}"
+                  ContainerPort: 5001
+        EOF
+      - echo "Build complete."
+
+artifacts:
+  files:
+    - taskdef.json
+    - appspec.yml
+  discard-paths: yes
