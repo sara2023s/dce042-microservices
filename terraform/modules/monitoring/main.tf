@@ -212,31 +212,41 @@ resource "aws_cloudwatch_dashboard" "main" {
   dashboard_body = jsonencode({
     widgets = [
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
-          title  = "ECS CPU Utilisation"
-          period = 60
-          stat   = "Average"
+          title   = "ECS CPU Utilisation"
+          region  = var.aws_region
+          period  = 60
+          stat    = "Average"
+          view    = "timeSeries"
           metrics = [
-            ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_a_name}", { label = "Service A CPU" }],
-            ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_b_name}", { label = "Service B CPU" }]
+            ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_a_name}", { "label" : "Service A CPU" }],
+            ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_b_name}", { "label" : "Service B CPU" }]
           ]
         }
       },
       {
-        type = "metric"
+        type   = "metric"
+        width  = 12
+        height = 6
         properties = {
-          title  = "ECS Memory Utilisation"
-          period = 60
-          stat   = "Average"
+          title   = "ECS Memory Utilisation"
+          region  = var.aws_region
+          period  = 60
+          stat    = "Average"
+          view    = "timeSeries"
           metrics = [
-            ["AWS/ECS", "MemoryUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_a_name}", { label = "Service A Memory" }],
-            ["AWS/ECS", "MemoryUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_b_name}", { label = "Service B Memory" }]
+            ["AWS/ECS", "MemoryUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_a_name}", { "label" : "Service A Memory" }],
+            ["AWS/ECS", "MemoryUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "${local.name_prefix}-${var.service_b_name}", { "label" : "Service B Memory" }]
           ]
         }
       },
       {
-        type = "alarm"
+        type   = "alarm"
+        width  = 24
+        height = 4
         properties = {
           title  = "Scaling Alarms"
           alarms = [

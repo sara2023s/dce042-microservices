@@ -218,7 +218,9 @@ resource "aws_codedeploy_deployment_group" "service_b" {
 
 # ── CodePipeline ──────────────────────────────────────────────────────────────
 # Pipeline: Source → Parallel Builds → Parallel Blue/Green Deploys
+# Only created once a valid CodeStar connection ARN is provided.
 resource "aws_codepipeline" "main" {
+  count    = var.codestar_connection_arn != "" ? 1 : 0
   name     = "${local.name_prefix}-pipeline"
   role_arn = var.codepipeline_role_arn
 
