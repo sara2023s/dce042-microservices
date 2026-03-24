@@ -139,7 +139,10 @@ module "cicd" {
   github_repo             = var.github_repo
   github_branch           = var.github_branch
   codestar_connection_arn = var.codestar_connection_arn
-  sns_topic_arn           = module.storage.sns_topic_arn
+  sns_topic_arn               = module.storage.sns_topic_arn
+  task_execution_role_arn     = module.iam.ecs_task_execution_role_arn
+  service_a_task_role_arn     = module.iam.service_a_task_role_arn
+  service_b_task_role_arn     = module.iam.service_b_task_role_arn
 }
 
 # ── 9. Azure Entra ID SAML Federation ────────────────────────────────────────

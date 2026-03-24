@@ -44,6 +44,18 @@ resource "aws_codebuild_project" "service_a" {
       name  = "AWS_ACCOUNT_ID"
       value = data.aws_caller_identity.current.account_id
     }
+    environment_variable {
+      name  = "TASK_DEF_FAMILY"
+      value = "${local.name_prefix}-${var.service_a_name}"
+    }
+    environment_variable {
+      name  = "EXECUTION_ROLE_ARN"
+      value = var.task_execution_role_arn
+    }
+    environment_variable {
+      name  = "TASK_ROLE_ARN"
+      value = var.service_a_task_role_arn
+    }
   }
 
   source {
@@ -94,6 +106,18 @@ resource "aws_codebuild_project" "service_b" {
     environment_variable {
       name  = "AWS_ACCOUNT_ID"
       value = data.aws_caller_identity.current.account_id
+    }
+    environment_variable {
+      name  = "TASK_DEF_FAMILY"
+      value = "${local.name_prefix}-${var.service_b_name}"
+    }
+    environment_variable {
+      name  = "EXECUTION_ROLE_ARN"
+      value = var.task_execution_role_arn
+    }
+    environment_variable {
+      name  = "TASK_ROLE_ARN"
+      value = var.service_b_task_role_arn
     }
   }
 
@@ -245,7 +269,7 @@ resource "aws_codepipeline" "main" {
         ConnectionArn        = var.codestar_connection_arn
         FullRepositoryId     = "${var.github_owner}/${var.github_repo}"
         BranchName           = var.github_branch
-        OutputArtifactFormat = "CODEBUILD_CLONE_REF"
+        OutputArtifactFormat = "CODE_ZIP"
       }
     }
   }

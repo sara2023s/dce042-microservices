@@ -24,3 +24,6 @@ variable "github_repo"                 { type = string }
 variable "github_branch"               { type = string }
 variable "codestar_connection_arn"     { type = string }
 variable "sns_topic_arn"               { type = string }
+variable "task_execution_role_arn"     { type = string }
+variable "service_a_task_role_arn"     { type = string }
+variable "service_b_task_role_arn"     { type = string }

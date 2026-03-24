@@ -22,9 +22,9 @@ terraform {
   # ── Remote backend ─────────────────────────────────────────────────────────
   # Update bucket / region / table to match what setup-backend.sh created.
   backend "s3" {
-    bucket         = "dce042-tf-state"
+    bucket         = "dce042-tf-state-731961417222"
     key            = "dce042/assessment1/terraform.tfstate"
-    region         = "us-east-1"
+    region         = "ap-southeast-2"
     dynamodb_table = "dce042-tf-state-lock"
     encrypt        = true
   }

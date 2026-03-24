@@ -1,11 +1,5 @@
 version: 0.2
 
-# CodeBuild buildspec for service-b (Order Service)
-
-env:
-  variables:
-    IMAGE_TAG: "latest"
-
 phases:
   pre_build:
     commands:
@@ -14,7 +8,7 @@ phases:
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:-latest}
       - FULL_IMAGE_URI=$ECR_REPO_URL:$IMAGE_TAG
-      - echo "Image URI: $FULL_IMAGE_URI"
+      - echo "Image URI $FULL_IMAGE_URI"
 
   build:
     commands:
@@ -28,47 +22,14 @@ phases:
       - echo "Pushing image to ECR..."
       - docker push $FULL_IMAGE_URI
       - docker push $ECR_REPO_URL:latest
-      - echo "Writing build artifacts..."
       - cd $CODEBUILD_SRC_DIR
-      - |
-        cat > taskdef.json << EOF
-        {
-          "family": "${TASK_DEF_FAMILY}",
-          "containerDefinitions": [
-            {
-              "name": "${SERVICE_NAME}",
-              "image": "${FULL_IMAGE_URI}",
-              "portMappings": [{"containerPort": 5001, "protocol": "tcp"}],
-              "essential": true,
-              "logConfiguration": {
-                "logDriver": "awslogs",
-                "options": {
-                  "awslogs-group": "/ecs/${SERVICE_NAME}",
-                  "awslogs-region": "${AWS_REGION}",
-                  "awslogs-stream-prefix": "ecs"
-                }
-              }
-            }
-          ],
-          "requiresCompatibilities": ["FARGATE"],
-          "networkMode": "awsvpc",
-          "cpu": "256",
-          "memory": "512"
-        }
-        EOF
-      - |
-        cat > appspec.yml << EOF
-        version: 0.0
-        Resources:
-          - TargetService:
-              Type: AWS::ECS::Service
-              Properties:
-                TaskDefinition: <TASK_DEFINITION>
-                LoadBalancerInfo:
-                  ContainerName: "${SERVICE_NAME}"
-                  ContainerPort: 5001
-        EOF
+      - echo "Writing taskdef.json..."
+      - printf '{"family":"%s","networkMode":"awsvpc","requiresCompatibilities":["FARGATE"],"cpu":"256","memory":"512","executionRoleArn":"%s","taskRoleArn":"%s","containerDefinitions":[{"name":"%s","image":"%s","essential":true,"portMappings":[{"containerPort":5001,"protocol":"tcp"}],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/ecs/%s","awslogs-region":"%s","awslogs-stream-prefix":"ecs"}}}]}' "$TASK_DEF_FAMILY" "$EXECUTION_ROLE_ARN" "$TASK_ROLE_ARN" "$SERVICE_NAME" "$FULL_IMAGE_URI" "$TASK_DEF_FAMILY" "$AWS_REGION" > taskdef.json
+      - echo "Writing appspec.yml..."
+      - printf 'version: 0.0\nResources:\n  - TargetService:\n      Type: AWS::ECS::Service\n      Properties:\n        TaskDefinition: "<TASK_DEFINITION>"\n        LoadBalancerInfo:\n          ContainerName: "%s"\n          ContainerPort: 5001\n' "$SERVICE_NAME" > appspec.yml
       - echo "Build complete."
+      - cat taskdef.json
+      - cat appspec.yml
 
 artifacts:
   files:
