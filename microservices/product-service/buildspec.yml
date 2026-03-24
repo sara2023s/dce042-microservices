@@ -3,31 +3,28 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
+      - echo Logging in to Amazon ECR
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:-latest}
-      - FULL_IMAGE_URI=$ECR_REPO_URL:$IMAGE_TAG
-      - echo "Image URI $FULL_IMAGE_URI"
+      - export FULL_IMAGE_URI=$ECR_REPO_URL:$IMAGE_TAG
+      - echo Image URI is $FULL_IMAGE_URI
 
   build:
     commands:
-      - echo "Building Docker image..."
+      - echo Building Docker image
       - cd microservices/$SERVICE_NAME
       - docker build -t $FULL_IMAGE_URI .
       - docker tag $FULL_IMAGE_URI $ECR_REPO_URL:latest
 
   post_build:
     commands:
-      - echo "Pushing image to ECR..."
+      - echo Pushing image to ECR
       - docker push $FULL_IMAGE_URI
       - docker push $ECR_REPO_URL:latest
       - cd $CODEBUILD_SRC_DIR
-      - echo "Writing taskdef.json..."
-      - printf '{"family":"%s","networkMode":"awsvpc","requiresCompatibilities":["FARGATE"],"cpu":"256","memory":"512","executionRoleArn":"%s","taskRoleArn":"%s","containerDefinitions":[{"name":"%s","image":"%s","essential":true,"portMappings":[{"containerPort":5000,"protocol":"tcp"}],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/ecs/%s","awslogs-region":"%s","awslogs-stream-prefix":"ecs"}}}]}' "$TASK_DEF_FAMILY" "$EXECUTION_ROLE_ARN" "$TASK_ROLE_ARN" "$SERVICE_NAME" "$FULL_IMAGE_URI" "$TASK_DEF_FAMILY" "$AWS_REGION" > taskdef.json
-      - echo "Writing appspec.yml..."
-      - printf 'version: 0.0\nResources:\n  - TargetService:\n      Type: AWS::ECS::Service\n      Properties:\n        TaskDefinition: "<TASK_DEFINITION>"\n        LoadBalancerInfo:\n          ContainerName: "%s"\n          ContainerPort: 5000\n' "$SERVICE_NAME" > appspec.yml
-      - echo "Build complete."
+      - echo Generating deployment artifacts
+      - python3 microservices/$SERVICE_NAME/generate_taskdef.py
       - cat taskdef.json
       - cat appspec.yml
 
