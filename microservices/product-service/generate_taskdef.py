@@ -26,7 +26,7 @@ taskdef = {
         "logConfiguration": {
             "logDriver": "awslogs",
             "options": {
-                "awslogs-group": "/ecs/" + TASK_DEF_FAMILY,
+                "awslogs-group": "/ecs/" + TASK_DEF_FAMILY[:-(len(SERVICE_NAME)+1)] + "/" + SERVICE_NAME,
                 "awslogs-region": AWS_REGION,
                 "awslogs-stream-prefix": "ecs"
             }
